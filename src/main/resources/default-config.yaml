@@ -1,0 +1,8 @@
+
+mqttPort: 62613
+httpPort: 61680
+threads: 3
+timeoutOnConnect: 60
+qosLevel: 0
+username: admin
+password: admin
