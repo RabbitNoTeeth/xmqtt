@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 /**
  * mqtt主题
@@ -18,6 +19,11 @@ public class MqttTopic {
      * 主题名称
      */
     private String name;
+
+    /**
+     * 主题正则
+     */
+    private Pattern pattern;
 
     /**
      * 消息数

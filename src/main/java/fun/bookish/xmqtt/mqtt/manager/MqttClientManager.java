@@ -9,6 +9,7 @@ import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
 import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,17 +54,18 @@ public class MqttClientManager {
 
     /**
      * 添加客户端订阅关联
-     * @param mqttEndpoint
+     * @param client
      * @param subscribe
      */
-    public static void addClientSubscribe(MqttEndpoint mqttEndpoint, MqttSubscribeMessage subscribe) {
+    public static void addClientSubscribe(MqttEndpoint client, MqttSubscribeMessage subscribe) {
         subscribe.topicSubscriptions().forEach(topicSubscription -> {
             String topicName = topicSubscription.topicName();
-            Pattern pattern = TopicNameParser.convert(topicName);
+            MqttTopic topic = checkTopicExists(topicName);
+            topic.getConsumers().add(client);
             TOPIC_MAP.forEach((key, value) -> {
-                Matcher matcher = pattern.matcher(key);
-                if(matcher.matches()){
-                    value.getConsumers().add(mqttEndpoint);
+                Matcher matcher = topic.getPattern().matcher(key);
+                if(!key.equals(topicName) && matcher.matches()){
+                    value.getConsumers().add(client);
                 }
             });
         });
@@ -71,16 +73,17 @@ public class MqttClientManager {
 
     /**
      * 移除客户端订阅关联
-     * @param mqttEndpoint
+     * @param client
      * @param unsubscribe
      */
-    public static void removeClientSubscribe(MqttEndpoint mqttEndpoint, MqttUnsubscribeMessage unsubscribe) {
+    public static void removeClientSubscribe(MqttEndpoint client, MqttUnsubscribeMessage unsubscribe) {
         unsubscribe.topics().forEach(topicName -> {
-            Pattern pattern = TopicNameParser.convert(topicName);
+            MqttTopic topic = checkTopicExists(topicName);
+            topic.getConsumers().remove(client);
             TOPIC_MAP.forEach((key, value) -> {
-                Matcher matcher = pattern.matcher(key);
+                Matcher matcher = topic.getPattern().matcher(key);
                 if(matcher.matches()){
-                    value.getConsumers().remove(mqttEndpoint);
+                    value.getConsumers().remove(client);
                 }
             });
         });
@@ -92,20 +95,42 @@ public class MqttClientManager {
      * @param message
      */
     public static void dispenseMessage(MqttEndpoint client, MqttPublishMessage message) {
+        Set<MqttEndpoint> targetConsumers = new HashSet<>();
+
         String topicName = message.topicName();
-        MqttTopic mqttTopic = TOPIC_MAP.get(topicName);
-        if(mqttTopic != null){
-            mqttTopic.getProducers().add(client);
-        }
+        MqttTopic topic = checkTopicExists(topicName);
+        topic.getMessageCount().incrementAndGet();
+        topic.getProducers().add(client);
 
         TOPIC_MAP.forEach((key, value) -> {
-            Pattern pattern = TopicNameParser.convert(topicName);
-            Matcher matcher = pattern.matcher(key);
+            Matcher matcher = value.getPattern().matcher(topicName);
             if(matcher.matches()){
-                value.getConsumers().forEach(consumer -> {
-                    consumer.publish(topicName, message.payload(), MqttQoS.valueOf(AppConfigManager.getAppConfig().getQosLevel()), false, false);
-                });
+                targetConsumers.addAll(value.getConsumers());
             }
         });
+
+        targetConsumers.forEach(consumer -> {
+            consumer.publish(topicName, message.payload(), MqttQoS.valueOf(AppConfigManager.getAppConfig().getQosLevel()), false, false);
+        });
+    }
+
+    /**
+     * 检查topic是否存在
+     * @param name
+     * @return
+     */
+    private static MqttTopic checkTopicExists(String name){
+        MqttTopic result = TOPIC_MAP.get(name);
+        if(result == null){
+            MqttTopic newOne = new MqttTopic();
+            newOne.setName(name);
+            newOne.setPattern(TopicNameParser.convert(name));
+            if(TOPIC_MAP.putIfAbsent(name, newOne) == null){
+                result = newOne;
+            }else{
+                result = TOPIC_MAP.get(name);
+            }
+        }
+        return result;
     }
 }

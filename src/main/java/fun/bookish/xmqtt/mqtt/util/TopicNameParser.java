@@ -11,8 +11,15 @@ public class TopicNameParser {
     private TopicNameParser(){}
 
     public static Pattern convert(String name){
-        // todo
-        return null;
+        name = name.replaceAll("\\+", "(\\\\w)+");
+        name = name.replaceAll("#", "(\\\\w)+([/]\\\\w+)*");
+        return Pattern.compile(name);
     }
 
+
+    public static void main(String[] args) {
+        Pattern p1 = convert("xd/AnalogACQ/+/upstream/+");
+        Pattern p2 = Pattern.compile("xd/AnalogACQ/(\\w)+/upstream/(\\w)+");
+        System.out.println("xxx");
+    }
 }

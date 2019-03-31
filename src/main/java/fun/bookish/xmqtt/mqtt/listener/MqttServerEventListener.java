@@ -3,17 +3,23 @@ package fun.bookish.xmqtt.mqtt.listener;
 import fun.bookish.xmqtt.mqtt.manager.MqttClientManager;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.mqtt.MqttEndpoint;
+import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
 import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * mqtt服务事件监听器
  * @author liuxindong
  */
 public class MqttServerEventListener {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttServerEventListener.class);
 
     private MqttServerEventListener(){}
 
@@ -22,7 +28,10 @@ public class MqttServerEventListener {
      * @param client  客户端连接
      */
     public static void onClientConnect(MqttEndpoint client) {
+        client.accept(false);
         MqttClientManager.addClient(client);
+        LOGGER.info("客户端连接成功, remoteAddress = {}, clientId = {}, will = {}", client.remoteAddress().toString(),
+                client.clientIdentifier(), client.will() == null ? "null" : client.will().toJson().toString());
     }
 
     /**
@@ -31,24 +40,29 @@ public class MqttServerEventListener {
      */
     public static void onClientDisConnect(MqttEndpoint client) {
         MqttClientManager.removeClient(client);
+        LOGGER.info("客户端断开连接, remoteAddress = {}, clientId = {}", client.remoteAddress().toString(), client.clientIdentifier());
     }
 
     /**
      * 监听客户端的订阅事件
-     * @param mqttEndpoint
+     * @param client
      * @param subscribe
      */
-    public static void onClientSubscribe(MqttEndpoint mqttEndpoint, MqttSubscribeMessage subscribe) {
-        MqttClientManager.addClientSubscribe(mqttEndpoint, subscribe);
+    public static void onClientSubscribe(MqttEndpoint client, MqttSubscribeMessage subscribe) {
+        MqttClientManager.addClientSubscribe(client, subscribe);
+        LOGGER.info("客户端添加订阅, remoteAddress = {}, clientId = {}, subscribes = {}", client.remoteAddress().toString(),
+                client.clientIdentifier(), subscribe.topicSubscriptions().stream().map(MqttTopicSubscription::topicName).collect(Collectors.toList()));
     }
 
     /**
      * 监听客户端的取消订阅事件
-     * @param mqttEndpoint
+     * @param client
      * @param unsubscribe
      */
-    public static void onClientUnSubscribe(MqttEndpoint mqttEndpoint, MqttUnsubscribeMessage unsubscribe) {
-        MqttClientManager.removeClientSubscribe(mqttEndpoint, unsubscribe);
+    public static void onClientUnSubscribe(MqttEndpoint client, MqttUnsubscribeMessage unsubscribe) {
+        MqttClientManager.removeClientSubscribe(client, unsubscribe);
+        LOGGER.info("客户端取消订阅, remoteAddress = {}, clientId = {}, unsubscribes = {}", client.remoteAddress().toString(),
+                client.clientIdentifier(), unsubscribe.topics());
     }
 
     /**
@@ -64,5 +78,7 @@ public class MqttServerEventListener {
             client.publishReceived(message.messageId());
         }
         MqttClientManager.dispenseMessage(client, message);
+        LOGGER.info("客户端发布消息, remoteAddress = {}, clientId = {}, topic = {}, payloadSize = {}bytes", client.remoteAddress().toString(),
+                client.clientIdentifier(), message.topicName(), message.payload().length());
     }
 }
