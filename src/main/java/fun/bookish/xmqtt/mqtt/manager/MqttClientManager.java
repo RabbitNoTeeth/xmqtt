@@ -108,7 +108,9 @@ public class MqttClientManager {
         });
 
         targetConsumers.forEach(consumer -> {
-            consumer.publish(topicName, message.payload(), MqttQoS.valueOf(AppConfigManager.getAppConfig().getQosLevel()), false, false);
+            if(consumer.isConnected()){
+                consumer.publish(topicName, message.payload(), MqttQoS.valueOf(AppConfigManager.getAppConfig().getQosLevel()), false, false);
+            }
         });
     }
 

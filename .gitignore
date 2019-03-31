@@ -2,3 +2,4 @@
 /.idea/
 /.gradle/
 /.vertx/
+/src/main/resources/dist/

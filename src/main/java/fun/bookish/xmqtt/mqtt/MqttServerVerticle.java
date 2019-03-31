@@ -24,7 +24,8 @@ public class MqttServerVerticle extends AbstractVerticle {
                                             .setPort(APP_CONFIG.getMqttPort())
                                             .setTimeoutOnConnect(APP_CONFIG.getTimeoutOnConnect());
         MqttServer mqttServer = MqttServer.create(vertx, options);
-        mqttServer.endpointHandler(this::handleEndpoint).listen();
+        mqttServer
+                .endpointHandler(this::handleEndpoint).listen();
 
     }
 
@@ -32,6 +33,12 @@ public class MqttServerVerticle extends AbstractVerticle {
 
         // 触发监听器的客户端连接事件
         MqttServerEventListener.onClientConnect(mqttEndpoint);
+
+        // 客户端关闭处理器
+//        mqttEndpoint.closeHandler(v -> {
+//            // 触发监听器的客户端断开事件
+//            MqttServerEventListener.onClientDisConnect(mqttEndpoint);
+//        });
 
         // 客户端断开连接处理器
         mqttEndpoint.disconnectHandler(v -> {

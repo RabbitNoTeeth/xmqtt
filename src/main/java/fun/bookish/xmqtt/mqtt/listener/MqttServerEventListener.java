@@ -41,6 +41,7 @@ public class MqttServerEventListener {
             client.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD);
             return;
         }
+        client.autoKeepAlive(true);
         client.accept(false);
         MqttClientManager.addClient(client);
         LOGGER.info("客户端连接成功, remoteAddress = {}, clientId = {}, will = {}", client.remoteAddress().toString(),
