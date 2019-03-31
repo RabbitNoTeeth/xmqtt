@@ -3,3 +3,5 @@
 /.gradle/
 /.vertx/
 /src/main/resources/dist/
+/build/
+/out/

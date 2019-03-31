@@ -1,5 +1,3 @@
-package fun.bookish.xmqtt;
-
 import fun.bookish.xmqtt.config.AppConfig;
 import fun.bookish.xmqtt.config.AppConfigManager;
 import fun.bookish.xmqtt.mqtt.manager.MqttClientManager;
