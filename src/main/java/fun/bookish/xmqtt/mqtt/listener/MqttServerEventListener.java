@@ -1,7 +1,11 @@
 package fun.bookish.xmqtt.mqtt.listener;
 
+import fun.bookish.xmqtt.config.AppConfig;
+import fun.bookish.xmqtt.config.AppConfigManager;
 import fun.bookish.xmqtt.mqtt.manager.MqttClientManager;
+import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import io.vertx.mqtt.MqttAuth;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.messages.MqttPublishMessage;
@@ -10,7 +14,6 @@ import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +31,16 @@ public class MqttServerEventListener {
      * @param client  客户端连接
      */
     public static void onClientConnect(MqttEndpoint client) {
+        AppConfig appConfig = AppConfigManager.getAppConfig();
+        // 校验登录信息
+        MqttAuth auth = client.auth();
+        if (auth == null || !appConfig.getUsername().equals(auth.getUsername()) ||
+                !appConfig.getPassword().equals(auth.getPassword())){
+            LOGGER.warn("客户端连接失败, remoteAddress = {}, clientId = {}, cause = 用户名或密码错误", client.remoteAddress().toString(),
+                    client.clientIdentifier());
+            client.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD);
+            return;
+        }
         client.accept(false);
         MqttClientManager.addClient(client);
         LOGGER.info("客户端连接成功, remoteAddress = {}, clientId = {}, will = {}", client.remoteAddress().toString(),

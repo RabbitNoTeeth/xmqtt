@@ -26,6 +26,11 @@ public class MqttTopic {
     private Pattern pattern;
 
     /**
+     * 是否具有通配符
+     */
+    private Boolean hasWildCardCharacter;
+
+    /**
      * 消息数
      */
     private AtomicLong messageCount;

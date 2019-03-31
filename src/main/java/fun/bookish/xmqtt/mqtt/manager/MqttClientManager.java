@@ -123,6 +123,7 @@ public class MqttClientManager {
             MqttTopic newOne = new MqttTopic();
             newOne.setName(name);
             newOne.setPattern(TopicNameParser.convert(name));
+            newOne.setHasWildCardCharacter(name.contains("+") || name.contains("#"));
             if(TOPIC_MAP.putIfAbsent(name, newOne) == null){
                 result = newOne;
             }else{

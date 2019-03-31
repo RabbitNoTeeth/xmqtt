@@ -2,10 +2,7 @@ package fun.bookish.xmqtt.http;
 
 import fun.bookish.xmqtt.config.AppConfig;
 import fun.bookish.xmqtt.config.AppConfigManager;
-import fun.bookish.xmqtt.http.handler.CrosHandler;
-import fun.bookish.xmqtt.http.handler.RequestParamsHandler;
-import fun.bookish.xmqtt.http.handler.ResponsePostHandler;
-import fun.bookish.xmqtt.http.handler.ResponsePreHandler;
+import fun.bookish.xmqtt.http.handler.*;
 import fun.bookish.xmqtt.http.route.ApiRoute;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.web.Router;
@@ -13,8 +10,6 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * http服务部署单元
@@ -38,10 +33,8 @@ public class HttpServerVerticle extends AbstractVerticle {
 
     private void configRouter(Router router) {
 
-        // 静态资源处理器
-        StaticHandler staticHandler = StaticHandler.create().setIndexPage("index.html").setWebRoot("dist");
-
         router.route()
+                .failureHandler(new RouteFailureHandler())
                 .handler(new CrosHandler())
                 .handler(CookieHandler.create())
                 .handler(BodyHandler.create())

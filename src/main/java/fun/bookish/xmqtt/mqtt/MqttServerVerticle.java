@@ -30,14 +30,6 @@ public class MqttServerVerticle extends AbstractVerticle {
 
     private void handleEndpoint(MqttEndpoint mqttEndpoint) {
 
-        // 校验登录信息
-        MqttAuth auth = mqttEndpoint.auth();
-        if (auth == null || !APP_CONFIG.getUsername().equals(auth.getUsername()) ||
-                !APP_CONFIG.getPassword().equals(auth.getPassword())){
-            mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD);
-            return;
-        }
-
         // 触发监听器的客户端连接事件
         MqttServerEventListener.onClientConnect(mqttEndpoint);
 

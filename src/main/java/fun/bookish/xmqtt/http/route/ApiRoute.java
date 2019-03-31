@@ -11,6 +11,7 @@ import io.vertx.mqtt.MqttEndpoint;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +47,7 @@ public class ApiRoute {
                                                     .put("remoteAddress", i);
                                     })
                                     .collect(Collectors.toList());
-        context.response().write(JsonUtil.getJsonStr(true,"查询成功", clientList));
+        context.response().write(JsonUtil.getJsonStr(true,"查询成功", clientList, (long) clientMap.size()));
         context.next();
     }
 
@@ -59,8 +60,8 @@ public class ApiRoute {
         Integer page = Integer.parseInt(params.getString("page"));
         Integer pageSize = Integer.parseInt(params.getString("pageSize"));
         Map<String, MqttTopic> topicMap = MqttClientManager.getTopicMap();
-        List<JsonObject> topicList = topicMap
-                                        .keySet()
+        Set<String> keySet = topicMap.keySet().stream().filter(i -> !topicMap.get(i).getHasWildCardCharacter()).collect(Collectors.toSet());
+        List<JsonObject> topicList = keySet
                                         .stream()
                                         .sorted()
                                         .skip((page - 1) * pageSize)
@@ -74,7 +75,7 @@ public class ApiRoute {
                                                     .put("producerCount", mqttTopic.getProducers().size());
                                         })
                                         .collect(Collectors.toList());
-        context.response().write(JsonUtil.getJsonStr(true,"查询成功", topicList));
+        context.response().write(JsonUtil.getJsonStr(true,"查询成功", topicList, (long) keySet.size()));
         context.next();
     }
 
