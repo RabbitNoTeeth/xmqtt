@@ -35,7 +35,13 @@ public class Application {
             }
         });
         // 部署http服务
-
+        vertx.deployVerticle("fun.bookish.xmqtt.http.HttpServerVerticle", new DeploymentOptions().setInstances(1), res -> {
+            if(res.succeeded()){
+                LOGGER.info("http服务部署成功, port = {}", appConfig.getHttpPort());
+            }else{
+                LOGGER.error("http服务部署失败", res.cause());
+            }
+        });
     }
 
     /**

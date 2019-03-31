@@ -37,6 +37,7 @@ dependencies {
     compile 'com.google.guava:guava:27.0.1-jre'
     compile 'io.vertx:vertx-core:3.6.3'
     compile 'io.vertx:vertx-mqtt:3.6.3'
+    compile 'io.vertx:vertx-web:3.6.3'
     compile 'org.yaml:snakeyaml:1.21'
     compile 'org.slf4j:slf4j-log4j12:1.7.21'
     compile 'org.slf4j:slf4j-api:1.7.21'

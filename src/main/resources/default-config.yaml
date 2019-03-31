@@ -1,5 +1,5 @@
 
-mqttPort: 62613
+mqttPort: 61613
 httpPort: 61680
 threads: 3
 timeoutOnConnect: 60

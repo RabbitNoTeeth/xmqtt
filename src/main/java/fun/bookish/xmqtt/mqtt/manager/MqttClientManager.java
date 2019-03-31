@@ -3,7 +3,6 @@ package fun.bookish.xmqtt.mqtt.manager;
 import fun.bookish.xmqtt.config.AppConfigManager;
 import fun.bookish.xmqtt.mqtt.util.TopicNameParser;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * mqtt客户端管理器
@@ -25,7 +23,7 @@ public class MqttClientManager {
     /**
      * 客户端连接集合
      */
-    private static final Set<MqttEndpoint> CLIENTS = new ConcurrentHashSet<>();
+    private static final Map<String, MqttEndpoint> CLIENT_MAP = new ConcurrentHashMap<>();
 
     /**
      * 主题集合
@@ -37,7 +35,7 @@ public class MqttClientManager {
      * @param client
      */
     public static void addClient(MqttEndpoint client) {
-        CLIENTS.add(client);
+        CLIENT_MAP.put(client.remoteAddress().toString(), client);
     }
 
     /**
@@ -45,7 +43,7 @@ public class MqttClientManager {
      * @param client
      */
     public static void removeClient(MqttEndpoint client) {
-        CLIENTS.remove(client);
+        CLIENT_MAP.remove(client.remoteAddress().toString());
         TOPIC_MAP.values().forEach(topic -> {
             topic.getProducers().remove(client);
             topic.getConsumers().remove(client);
@@ -132,5 +130,13 @@ public class MqttClientManager {
             }
         }
         return result;
+    }
+
+    public static Map<String, MqttEndpoint> getClientMap() {
+        return CLIENT_MAP;
+    }
+
+    public static Map<String, MqttTopic> getTopicMap() {
+        return TOPIC_MAP;
     }
 }
